@@ -43,6 +43,7 @@ public class DrivetrainSubsystem extends Subsystem {
 		
 	}
 	
+	
 	public static CANTalon getLeftMaster(){
 		return leftMaster;
 	}
@@ -169,6 +170,13 @@ public class DrivetrainSubsystem extends Subsystem {
         }
         setMotorOutputs(leftMotorSpeed, rightMotorSpeed, scaledInputs);
     }
+	
+	public void forwardFullVelocity(){
+		setMotorOutputs(1,1,false);
+	}
+	public void backwardsFullVelocity(){
+		setMotorOutputs(-1,-1,false);
+	}
 	
     public void tankDrive(double leftValue, double rightValue, boolean scaledInputs) {
         leftValue = limit(leftValue);

@@ -41,13 +41,13 @@ public class OI {
 	
 	private static Joystick joystick = new Joystick(0);
 	
-	private static JoystickButton shootButton = new JoystickButton(joystick, 1);
-	private static JoystickButton pressureButton = new JoystickButton(joystick, 2);
+	private static JoystickButton aPressed = new JoystickButton(joystick, 1);
+	private static JoystickButton bPressed = new JoystickButton(joystick, 2);
 	private static JoystickButton safety1 = new JoystickButton(joystick, 5);
 	private static JoystickButton safety2 = new JoystickButton(joystick, 6);
 	
 	public static void initialize(){
-		shootButton.whenPressed(new CyberShootCommand());
+		aPressed.whenPressed(new CyberShootCommand());
 		//pressureButton.whenPressed(new CyberPressurizeCommand(Pressure.MID));
 	}
 	
@@ -69,6 +69,12 @@ public class OI {
 	}
 	public static boolean getSafety2(){
 		return safety2.get();
+	}
+	public static boolean aPressed(){
+		return aPressed.get();
+	}
+	public static boolean bPressed(){
+		return bPressed.get();
 	}
 	
 }
