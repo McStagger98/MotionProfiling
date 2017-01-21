@@ -32,23 +32,14 @@ public class DrivetrainSubsystem extends Subsystem {
 		leftMaster.reverseSensor(true);
 		rightMaster.reverseSensor(true);
 		
-		rightMaster.reverseOutput(true);
-		
 		leftMaster.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
 		rightMaster.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
-		
-	
 		
 		leftMaster.configEncoderCodesPerRev(360);
 		rightMaster.configEncoderCodesPerRev(360);
 		
 		leftMaster.setF(1500);
 		rightMaster.setF(1500);
-		
-		leftSlave.changeControlMode(TalonControlMode.Follower);
-    	rightSlave.changeControlMode(TalonControlMode.Follower);
-    	leftSlave.set(RobotMap.ProgrammingBot.leftMasterID);
-    	rightSlave.set(RobotMap.ProgrammingBot.rightMasterID);
 		
 	}
 	
@@ -75,22 +66,25 @@ public class DrivetrainSubsystem extends Subsystem {
     	else{
     		leftMaster.set(-leftSpeed);
 	    	rightMaster.set(rightSpeed);
-	    	//leftSlave.set(-leftSpeed);
-	    	//rightSlave.set(rightSpeed);
+	    	leftSlave.set(-leftSpeed);
+	    	rightSlave.set(rightSpeed);
     	}
     }
     
     public void motionProfileMode(){
     	leftMaster.changeControlMode(TalonControlMode.MotionProfile);
     	rightMaster.changeControlMode(TalonControlMode.MotionProfile);
-    	
+    	leftSlave.changeControlMode(TalonControlMode.Follower);
+    	rightSlave.changeControlMode(TalonControlMode.Follower);
+    	leftSlave.set(RobotMap.ProgrammingBot.leftMasterID);
+    	rightSlave.set(RobotMap.ProgrammingBot.rightMasterID);
     }
     
     public void percentVoltageMode(){
     	leftMaster.changeControlMode(TalonControlMode.PercentVbus);
     	rightMaster.changeControlMode(TalonControlMode.PercentVbus);
-    	//leftSlave.changeControlMode(TalonControlMode.PercentVbus);
-    	//rightSlave.changeControlMode(TalonControlMode.PercentVbus);
+    	leftSlave.changeControlMode(TalonControlMode.PercentVbus);
+    	rightSlave.changeControlMode(TalonControlMode.PercentVbus);
     }
     
     private static double limit(double num) {
