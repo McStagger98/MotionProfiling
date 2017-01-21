@@ -23,6 +23,7 @@
  * 
  */
 package motion_profiling;
+
 import com.ctre.CANTalon;
 
 import edu.wpi.first.wpilibj.Timer;
