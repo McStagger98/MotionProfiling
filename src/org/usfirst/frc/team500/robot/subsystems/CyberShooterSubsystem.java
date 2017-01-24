@@ -39,7 +39,7 @@ public class CyberShooterSubsystem extends Subsystem implements PIDSource, PIDOu
     }
     
     public static CyberShooterSubsystem instance = new CyberShooterSubsystem();
-    
+
     public static void shoot(){ 		//maybe change later
     	shooterMotor.set(1);
     	Timer.delay(.5);
@@ -47,7 +47,10 @@ public class CyberShooterSubsystem extends Subsystem implements PIDSource, PIDOu
     }
     
     public static void stopShooter(){
-    	shooterMotor.set(0);
+    	if (Robot.bot.getName().equals("Cyber")){
+    		shooterMotor.set(0);
+    	}
+    	
     }
     
     public static double getPressure(){		//change to make it accurate

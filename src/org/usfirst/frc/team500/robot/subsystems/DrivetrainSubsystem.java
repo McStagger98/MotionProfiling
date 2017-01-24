@@ -7,6 +7,7 @@ import com.ctre.CANTalon;
 import com.ctre.CANTalon.TalonControlMode;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  *
@@ -17,6 +18,10 @@ public class DrivetrainSubsystem extends Subsystem {
 	static CANTalon leftSlave;
 	static CANTalon rightMaster;
 	static CANTalon rightSlave;
+	
+	private long curTime, difTime, lastTime;
+	private double talon2Pos, talon4Pos, talon2RPM, talon4RPM, rightSpeed, leftSpeed;
+	private boolean firstLogFileRun = true;
 	
     public void initDefaultCommand() {
         // Set the default command for a subsystem here.
@@ -72,6 +77,8 @@ public class DrivetrainSubsystem extends Subsystem {
     		//Robot.bot.getCANTalonObj(3).set(scaleInput(rightSpeed));
     	}
     	else{
+    		this.leftSpeed = -leftSpeed;
+    		this.rightSpeed = rightSpeed;
     		leftMaster.set(-leftSpeed);
 	    	rightMaster.set(rightSpeed);
 	    	//leftSlave.set(-leftSpeed);
@@ -173,6 +180,7 @@ public class DrivetrainSubsystem extends Subsystem {
                 rightMotorSpeed = -Math.max(-moveValue, -rotateValue);
             }
         }
+       
         setMotorOutputs(leftMotorSpeed, rightMotorSpeed, scaledInputs);
     }
 	
@@ -187,6 +195,36 @@ public class DrivetrainSubsystem extends Subsystem {
         leftValue = limit(leftValue);
         rightValue = limit(rightValue);
         setMotorOutputs(leftValue, rightValue, scaledInputs);
+    }
+    
+    public void populateLog(long startTime){
+    	if (firstLogFileRun){
+    		lastTime = startTime;
+    		firstLogFileRun = false;
+    	}
+    	curTime = System.currentTimeMillis();
+    	difTime = curTime - lastTime;
+    	
+    	if (difTime >= 100){
+    		SmartDashboard.putNumber("talon 4 throttle", rightSpeed * 100);
+    		SmartDashboard.putNumber("Talon 2 Throttle", leftSpeed  * 100);
+    		SmartDashboard.putNumber("Talon 2 Position", talon2Pos);
+    		SmartDashboard.putNumber("Talon 2 rpm", talon2RPM);
+    		SmartDashboard.putNumber("Talon 4 Position", talon4Pos);
+    		SmartDashboard.putNumber("Talon 4 rpm", talon4RPM);
+    		SmartDashboard.putNumber("Time", (curTime-startTime)/1000);
+        	talon2Pos = DrivetrainSubsystem.getLeftMaster().getEncPosition();
+    		talon2RPM = DrivetrainSubsystem.getLeftMaster().getSpeed();
+    		talon4Pos = DrivetrainSubsystem.getRightMaster().getEncPosition();
+    		talon4RPM = DrivetrainSubsystem.getRightMaster().getSpeed();
+        	System.out.format("%s\n", "Time," + (curTime-startTime)/1000);
+    		System.out.format("%s\n", "Talon 2 position:" + talon2Pos);
+    		System.out.format("%s\n", "Talon 2 rpm" +  talon2RPM);
+    		System.out.format("%s\n", "Talon 4 Position" + talon4Pos);
+    		System.out.format("%s\n", "Talon 4 rpm" +  talon4RPM);
+    		lastTime = curTime;
+    	}
+    	
     }
 }
 

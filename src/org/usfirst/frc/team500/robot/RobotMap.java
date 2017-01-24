@@ -44,7 +44,7 @@ public class RobotMap {
 		public static final int leftMasterID = 2;
 		public static final int leftSlaveID = 1;
 		public static final int rightMasterID = 4;
-		public static final int rightSlaveID = 3;
+		public static final int rightSlaveID  = 3;
 
 	}
 }

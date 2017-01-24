@@ -94,8 +94,14 @@ public class Robot extends IterativeRobot {
     	DrivetrainSubsystem.getInstance().percentVoltageMode();
     	(new ArcadeDriveCommand()).start();
     	
-    	if (bot.getName() == "Cyber"){
-    		(new CyberTeleopArmCommand()).start();
+    	
+    	try{
+    		if (bot.getName().equals("Cyber")){
+    			(new CyberTeleopArmCommand()).start();
+    		}
+    	}
+    	catch (NullPointerException e){
+    		e.printStackTrace();
     	}
     	
     }
@@ -106,6 +112,7 @@ public class Robot extends IterativeRobot {
     public void teleopPeriodic() {
     	//SmartDashboard.putNumber("pressure", CyberShooterSubsystem.getPressure());
     	Scheduler.getInstance().run();
+    	
     }
     
     /**
