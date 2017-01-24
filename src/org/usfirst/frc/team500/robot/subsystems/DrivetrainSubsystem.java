@@ -19,7 +19,7 @@ public class DrivetrainSubsystem extends Subsystem {
 	static CANTalon rightMaster;
 	static CANTalon rightSlave;
 	
-	private long curTime, difTime, lastTime;
+	private long curTime, difTime, lastTime;         
 	private double talon2Pos, talon4Pos, talon2RPM, talon4RPM, rightSpeed, leftSpeed;
 	private boolean firstLogFileRun = true;
 	
@@ -43,8 +43,8 @@ public class DrivetrainSubsystem extends Subsystem {
 		leftMaster.configEncoderCodesPerRev(360);
 		rightMaster.configEncoderCodesPerRev(360);
 		
-		leftMaster.setF(1500);
-		rightMaster.setF(1500);
+		leftMaster.setF(1.60244);
+		rightMaster.setF(1.09295);
 		
 		rightMaster.reverseOutput(true);
 		leftMaster.reverseOutput(false);
@@ -163,7 +163,7 @@ public class DrivetrainSubsystem extends Subsystem {
         rotateValue = limit(rotateValue);
         percentVoltageMode();
 
-        if (moveValue > 0.0) {
+        if (moveValue > 0.0) { 
             if (rotateValue > 0.0) {
                 leftMotorSpeed = moveValue - rotateValue;
                 rightMotorSpeed = Math.max(moveValue, rotateValue);
