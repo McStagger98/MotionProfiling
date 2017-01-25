@@ -20,7 +20,7 @@ public class DrivetrainSubsystem extends Subsystem {
 	static CANTalon rightSlave;
 	
 	private long curTime, difTime, lastTime;         
-	private double talon2Pos, talon4Pos, talon2RPM, talon4RPM, rightSpeed, leftSpeed;
+	private double talonLeftPos, talonRightPos, talonLeftRPM, talonRightRPM, rightSpeed, leftSpeed;
 	private boolean firstLogFileRun = true;
 	
     public void initDefaultCommand() {
@@ -34,8 +34,8 @@ public class DrivetrainSubsystem extends Subsystem {
 		leftSlave = Robot.bot.getCANTalonObj(2);
 		rightSlave = Robot.bot.getCANTalonObj(3);
 		
-		leftMaster.reverseSensor(true);
-		rightMaster.reverseSensor(true);
+		leftMaster.reverseSensor(false);
+		rightMaster.reverseSensor(false);
 		
 		leftMaster.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
 		rightMaster.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
@@ -43,8 +43,11 @@ public class DrivetrainSubsystem extends Subsystem {
 		leftMaster.configEncoderCodesPerRev(360);
 		rightMaster.configEncoderCodesPerRev(360);
 		
-		leftMaster.setF(1.60244);
-		rightMaster.setF(1.09295);
+		leftMaster.setF(1.511524822);
+		rightMaster.setF(1.065625);
+		
+		leftMaster.setP(0);
+		rightMaster.setP(.04);
 		
 		rightMaster.reverseOutput(true);
 		leftMaster.reverseOutput(false);
@@ -63,6 +66,7 @@ public class DrivetrainSubsystem extends Subsystem {
 	public static CANTalon getRightMaster(){
 		return rightMaster;
 	}
+	
     private static DrivetrainSubsystem instance = new DrivetrainSubsystem();
     
     public static DrivetrainSubsystem getInstance(){
@@ -89,7 +93,6 @@ public class DrivetrainSubsystem extends Subsystem {
     public void motionProfileMode(){
     	leftMaster.changeControlMode(TalonControlMode.MotionProfile);
     	rightMaster.changeControlMode(TalonControlMode.MotionProfile);
-    	
     }
     
     public void percentVoltageMode(){
@@ -206,22 +209,22 @@ public class DrivetrainSubsystem extends Subsystem {
     	difTime = curTime - lastTime;
     	
     	if (difTime >= 100){
-    		SmartDashboard.putNumber("talon 4 throttle", rightSpeed * 100);
-    		SmartDashboard.putNumber("Talon 2 Throttle", leftSpeed  * 100);
-    		SmartDashboard.putNumber("Talon 2 Position", talon2Pos);
-    		SmartDashboard.putNumber("Talon 2 rpm", talon2RPM);
-    		SmartDashboard.putNumber("Talon 4 Position", talon4Pos);
-    		SmartDashboard.putNumber("Talon 4 rpm", talon4RPM);
+    		SmartDashboard.putNumber("talon right throttle", rightSpeed);
+    		SmartDashboard.putNumber("Talon left Throttle", leftSpeed);
+    		SmartDashboard.putNumber("Talon left Position", talonLeftPos);
+    		SmartDashboard.putNumber("Talon left rpm", talonLeftRPM);
+    		SmartDashboard.putNumber("Talon right Position", -talonRightPos);
+    		SmartDashboard.putNumber("Talon right rpm", -talonRightRPM);
     		SmartDashboard.putNumber("Time", (curTime-startTime)/1000);
-        	talon2Pos = DrivetrainSubsystem.getLeftMaster().getEncPosition();
-    		talon2RPM = DrivetrainSubsystem.getLeftMaster().getSpeed();
-    		talon4Pos = DrivetrainSubsystem.getRightMaster().getEncPosition();
-    		talon4RPM = DrivetrainSubsystem.getRightMaster().getSpeed();
+        	talonLeftPos = DrivetrainSubsystem.getLeftMaster().getEncPosition();
+    		talonLeftRPM = DrivetrainSubsystem.getLeftMaster().getSpeed();
+    		talonRightPos = DrivetrainSubsystem.getRightMaster().getEncPosition();
+    		talonRightRPM = DrivetrainSubsystem.getRightMaster().getSpeed();
         	System.out.format("%s\n", "Time," + (curTime-startTime)/1000);
-    		System.out.format("%s\n", "Talon 2 position:" + talon2Pos);
-    		System.out.format("%s\n", "Talon 2 rpm" +  talon2RPM);
-    		System.out.format("%s\n", "Talon 4 Position" + talon4Pos);
-    		System.out.format("%s\n", "Talon 4 rpm" +  talon4RPM);
+    		System.out.format("%s\n", "Talon left position: " + talonLeftPos);
+    		System.out.format("%s\n", "Talon left rpm: " +  talonLeftRPM);
+    		System.out.format("%s\n", "Talon right position: " + talonRightPos);
+    		System.out.format("%s\n", "Talon right rpm: " +  talonRightRPM);
     		lastTime = curTime;
     	}
     	
