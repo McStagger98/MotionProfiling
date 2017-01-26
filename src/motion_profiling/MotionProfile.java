@@ -29,6 +29,12 @@ import com.ctre.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+
+//THIS CLASS IS NOW DEPRECATED!
+/**
+ * @deprecated  Use methods built into drivetrainsubsystem {@link #getPreferredSize()}
+ */
+@Deprecated
 public class MotionProfile {
 	/**
 	 * The status of the motion profile executer and buffer inside the Talon.

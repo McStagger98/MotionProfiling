@@ -72,10 +72,10 @@ public class Robot extends IterativeRobot {
     	// schedule the autonomous command (example)
     	// if (autonomousCommand != null) autonomousCommand.start();
     	
-    	MotionProfile leftProfile = new MotionProfile(DrivetrainSubsystem.getLeftMaster(), GeneratedMotionProfile.Points);
-    	MotionProfile rightProfile = new MotionProfile(DrivetrainSubsystem.getRightMaster(), GeneratedMotionProfile.Points);
+    	//MotionProfile leftProfile = new MotionProfile(DrivetrainSubsystem.getLeftMaster(), GeneratedMotionProfile.Points);
+    	//MotionProfile rightProfile = new MotionProfile(DrivetrainSubsystem.getRightMaster(), GeneratedMotionProfile.Points);
     
-    	(new MotionProfileCommand(leftProfile, rightProfile)).start();
+    	(new MotionProfileCommand(GeneratedMotionProfile.Points, GeneratedMotionProfile.Points)).start();
     }
 
     /**

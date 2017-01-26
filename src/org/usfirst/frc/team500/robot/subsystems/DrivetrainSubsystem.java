@@ -92,7 +92,11 @@ public class DrivetrainSubsystem extends Subsystem {
     	rightMaster.enableBrakeMode(false);
     	leftMaster.enableBrakeMode(false);
     	
-    	rightMaster.changeMotionControlFramePeriod(5);
+    	
+	}
+	
+	public void initProfiler(){
+		rightMaster.changeMotionControlFramePeriod(5);
 		rightMaster.changeControlMode(CANTalon.TalonControlMode.MotionProfile);
 		rightMaster.clearMotionProfileTrajectories();
 		rightMaster.set(setValue.value);
