@@ -39,7 +39,7 @@ public class DrivetrainSubsystem extends Subsystem {
 	private double[][] pointsRight;
 	private double[][] pointsLeft;
 
-	private boolean isFinished = false;  
+	private static boolean isFinished = false;  
 	
 	public class PeriodicRunnableRight implements Runnable {
 	    public void run() {  
@@ -354,6 +354,9 @@ public class DrivetrainSubsystem extends Subsystem {
 		Instrumentation.process(statusLeft);
 		Instrumentation.process(statusRight);
 	}
+    public boolean profileIsFinished(){
+    	return isFinished;
+    }
 
     public void reset() {
 		/*
