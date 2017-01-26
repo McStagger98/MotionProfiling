@@ -207,6 +207,7 @@ public class MotionProfile {
 						 * points
 						 */
 					/* do we have a minimum numberof points in Talon */
+									
 					System.out.format("%s\n", "Waiing for Stream to build on Talon");
 					if (status.btmBufferCnt > kMinPointsInTalon) {
 						/* start (once) the motion profile */
@@ -237,11 +238,12 @@ public class MotionProfile {
 						 * because we set the last point's isLast to true, we will
 						 * get here when the MP is done
 						 */
-						System.out.format("%s\n", "Finished!!");
+						System.out.format("%s\n", "Finished!! time:" + System.currentTimeMillis());
 						setValue = CANTalon.SetValueMotionProfile.Hold;
 						state = 3;
 						loopTimeout = -1;
 						isFinished = true;
+						
 					}
 					break;
 			}
