@@ -453,8 +453,7 @@ public class DrivetrainSubsystem extends Subsystem {
     	this.pointsLeft = pointsLeft;
     	this.pointsRight = pointsRight;
     }
-
-    
+  
     public void populateLog(long startTime){
     	if (firstLogFileRun){
     		lastTime = startTime;
