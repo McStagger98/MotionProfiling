@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import motion_profiling.Instrumentation;
-import motion_profiling.MotionProfile.PeriodicRunnable;
 
 /**
  *
@@ -24,8 +23,6 @@ public class DrivetrainSubsystem extends Subsystem {
 	
 	private CANTalon.SetValueMotionProfile setValue = CANTalon.SetValueMotionProfile.Disable;
 	private CANTalon.MotionProfileStatus statusRight = new CANTalon.MotionProfileStatus();
-	
-	
 	private CANTalon.MotionProfileStatus statusLeft = new CANTalon.MotionProfileStatus();
 	
 	private long curTime, difTime, lastTime;         
@@ -46,6 +43,7 @@ public class DrivetrainSubsystem extends Subsystem {
 	    	rightMaster.processMotionProfileBuffer();
 	    }
 	}
+	
 	Notifier _notifierRight = new Notifier(new PeriodicRunnableRight());
 	
 	public class PeriodicRunnableLeft implements Runnable {
@@ -53,6 +51,7 @@ public class DrivetrainSubsystem extends Subsystem {
 	    	leftMaster.processMotionProfileBuffer();
 	    }
 	}
+	
 	Notifier _notifierLeft = new Notifier(new PeriodicRunnableLeft());
 	
     public void initDefaultCommand() {
@@ -60,7 +59,7 @@ public class DrivetrainSubsystem extends Subsystem {
         //setDefaultCommand(new MySpecialCommand());
     }
     
-	public DrivetrainSubsystem(){
+	private DrivetrainSubsystem(){
 		leftMaster = Robot.bot.getCANTalonObj(0);
 		rightMaster = Robot.bot.getCANTalonObj(1);
 		leftSlave = Robot.bot.getCANTalonObj(2);
@@ -75,12 +74,15 @@ public class DrivetrainSubsystem extends Subsystem {
 		leftMaster.configEncoderCodesPerRev(360);
 		rightMaster.configEncoderCodesPerRev(360);
 		
+		
 		leftMaster.setF(1.511524822);
 		rightMaster.setF(1.065625);
 		
 		leftMaster.setP(0);
-		//rightMaster.setP(.04);
-		rightMaster.setP(0);
+		rightMaster.setP(.065);
+		rightMaster.setI(.001);
+		
+		
 		rightMaster.reverseOutput(true);
 		leftMaster.reverseOutput(false);
 		
@@ -90,12 +92,12 @@ public class DrivetrainSubsystem extends Subsystem {
     	rightSlave.set(RobotMap.ProgrammingBot.rightMasterID);
 		
     	rightMaster.enableBrakeMode(false);
-    	leftMaster.enableBrakeMode(false);
-    	
-    	
+    	leftMaster.enableBrakeMode(false);	
 	}
 	
-	public void initProfiler(){
+	public void profileInit(double[][] pointsRight, double[][] pointsLeft){
+		this.pointsRight = pointsRight;
+		this.pointsLeft = pointsLeft;
 		rightMaster.changeMotionControlFramePeriod(5);
 		rightMaster.changeControlMode(CANTalon.TalonControlMode.MotionProfile);
 		rightMaster.clearMotionProfileTrajectories();
@@ -110,10 +112,10 @@ public class DrivetrainSubsystem extends Subsystem {
 	}
 	
 	
-	public static CANTalon getLeftMaster(){
+	public CANTalon getLeftMaster(){
 		return leftMaster;
 	}
-	public static CANTalon getRightMaster(){
+	public CANTalon getRightMaster(){
 		return rightMaster;
 	}
 	
@@ -307,8 +309,11 @@ public class DrivetrainSubsystem extends Subsystem {
 						 */
 					/* do we have a minimum numberof points in Talon */
 					System.out.format("%s\n", "Waiing for Stream to build on Talon");
-					if ((statusRight.btmBufferCnt > kMinPointsInTalon)&&(statusLeft.btmBufferCnt > kMinPointsInTalon)) {
+					System.out.format("%s\n", "right bottom buffer count: " + statusRight.btmBufferCnt);
+					System.out.format("%s\n", "left bottom buffer count: " + statusLeft.btmBufferCnt);
+					if ((statusRight.btmBufferCnt > kMinPointsInTalon) &&(statusLeft.btmBufferCnt > kMinPointsInTalon)) {
 						/* start (once) the motion profile */
+						System.out.format("%s\n", "Enabling Profile");
 						setValue = CANTalon.SetValueMotionProfile.Enable;
 						/* MP will start once the control frame gets scheduled */
 						state = 2;
@@ -358,6 +363,7 @@ public class DrivetrainSubsystem extends Subsystem {
 		Instrumentation.process(statusLeft);
 		Instrumentation.process(statusRight);
 	}
+    
     public boolean profileIsFinished(){
     	return isFinished;
     }
@@ -384,8 +390,10 @@ public class DrivetrainSubsystem extends Subsystem {
 		rightMaster.set(setValue.value);
 		leftMaster.set(setValue.value);
 	}
+    
     private void startFilling() {
 		System.out.format("%s\n", "Start Filling Buffer");
+		System.out.format("%s\n", "points in profile "+ pointsRight.length);
 		/* create an empty point */
 		CANTalon.TrajectoryPoint pointRight = new CANTalon.TrajectoryPoint();
 		CANTalon.TrajectoryPoint pointLeft = new CANTalon.TrajectoryPoint();
@@ -431,7 +439,7 @@ public class DrivetrainSubsystem extends Subsystem {
 				pointRight.isLastPoint = true; /* set this to true on the last point  */
 
 				
-			leftMaster.pushMotionProfileTrajectory(pointRight);
+			rightMaster.pushMotionProfileTrajectory(pointRight);
 		}
 		for (int i = 0; i < pointsLeft.length; ++i) {
 			/* for each point, fill our structure and pass it to API */
@@ -455,11 +463,6 @@ public class DrivetrainSubsystem extends Subsystem {
 		}
 		System.out.format("%s\n", "Points Path has been loaded !!");
 	}
-    // THIS METHOD MUST BE CALLED BEFORE RUNNING A PROFILE. 
-    public void setPathRightLeft(double[][] pointsRight, double[][] pointsLeft){
-    	this.pointsLeft = pointsLeft;
-    	this.pointsRight = pointsRight;
-    }
   
     public void populateLog(long startTime){
     	if (firstLogFileRun){
@@ -470,17 +473,11 @@ public class DrivetrainSubsystem extends Subsystem {
     	difTime = curTime - lastTime;
     	
     	if (difTime >= 100){
-    		SmartDashboard.putNumber("talon right throttle", rightSpeed);
-    		SmartDashboard.putNumber("Talon left Throttle", leftSpeed);
-    		SmartDashboard.putNumber("Talon left Position", talonLeftPos);
-    		SmartDashboard.putNumber("Talon left rpm", talonLeftRPM);
-    		SmartDashboard.putNumber("Talon right Position", -talonRightPos);
-    		SmartDashboard.putNumber("Talon right rpm", -talonRightRPM);
-    		SmartDashboard.putNumber("Time", (curTime-startTime)/1000);
-        	talonLeftPos = DrivetrainSubsystem.getLeftMaster().getEncPosition();
-    		talonLeftRPM = DrivetrainSubsystem.getLeftMaster().getSpeed();
-    		talonRightPos = DrivetrainSubsystem.getRightMaster().getEncPosition();
-    		talonRightRPM = DrivetrainSubsystem.getRightMaster().getSpeed();
+        	talonLeftPos = DrivetrainSubsystem.getInstance().getLeftMaster().getEncPosition();
+    		talonLeftRPM = DrivetrainSubsystem.getInstance().getLeftMaster().getSpeed();
+    		talonRightPos = DrivetrainSubsystem.getInstance().getRightMaster().getEncPosition();
+    		talonRightRPM = DrivetrainSubsystem.getInstance().getRightMaster().getSpeed();
+
         	System.out.format("%s\n", "Time," + (curTime-startTime)/1000);
     		System.out.format("%s\n", "Talon left position: " + talonLeftPos);
     		System.out.format("%s\n", "Talon left rpm: " +  talonLeftRPM);
@@ -488,6 +485,14 @@ public class DrivetrainSubsystem extends Subsystem {
     		System.out.format("%s\n", "Talon right rpm: " +  talonRightRPM);
     		lastTime = curTime;
     	}
+    	
+		SmartDashboard.putNumber("talon right throttle", rightSpeed);
+		SmartDashboard.putNumber("Talon left Throttle", leftSpeed);
+		SmartDashboard.putNumber("Talon left Position", talonLeftPos);
+		SmartDashboard.putNumber("Talon left rpm", talonLeftRPM);
+		SmartDashboard.putNumber("Talon right Position", -talonRightPos);
+		SmartDashboard.putNumber("Talon right rpm", -talonRightRPM);
+		SmartDashboard.putNumber("Time", (curTime-startTime)/1000);
     	
     }
 }

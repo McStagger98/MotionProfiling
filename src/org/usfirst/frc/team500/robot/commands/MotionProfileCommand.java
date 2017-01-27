@@ -19,13 +19,13 @@ public class MotionProfileCommand extends Command {
     	this.leftProfile = leftProfile;
     	this.rightProfile = rightProfile;
     	requires(DrivetrainSubsystem.getInstance());
-    	DrivetrainSubsystem.getInstance().initProfiler();
+    	DrivetrainSubsystem.getInstance().profileInit(rightProfile, leftProfile);
     }
     
 
     // Called just before this Command runs the first time
     protected void initialize() {
-    	DrivetrainSubsystem.getInstance().setPathRightLeft(rightProfile, leftProfile);
+   
     }
 
     // Called repeatedly when this Command is scheduled to run
@@ -41,8 +41,7 @@ public class MotionProfileCommand extends Command {
     // Called once after isFinished returns true
     protected void end() {
     	SmartDashboard.putBoolean("finished motion profile", isFinished());
-    	DrivetrainSubsystem.getInstance().getRightMaster().set(0);
-    	DrivetrainSubsystem.getInstance().getLeftMaster().set(0);
+    	DrivetrainSubsystem.getInstance().reset();
     }
 
     // Called when another command which requires one or more of the same

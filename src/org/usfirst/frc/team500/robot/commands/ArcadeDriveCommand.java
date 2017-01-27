@@ -21,13 +21,10 @@ public class ArcadeDriveCommand extends Command {
 
     // Called just before this Command runs the first time
     protected void initialize() {
-    	startTime = System.currentTimeMillis();
     }
 
     // Called repeatedly when this Command is scheduled to run
     protected void execute() {
-    	
-    	DrivetrainSubsystem.getInstance().populateLog(startTime);
     	if (OI.aPressed()){
     		DrivetrainSubsystem.getInstance().forwardFullVelocity();
     	}
@@ -35,15 +32,7 @@ public class ArcadeDriveCommand extends Command {
     		DrivetrainSubsystem.getInstance().backwardsFullVelocity();
     	}
     	else {
-    		
     		DrivetrainSubsystem.getInstance().arcadeDrive(OI.getLeftYValue(), OI.getLeftXValue(), RobotMap.Cyber.DRIVE_SENSITIVITY);
-    		
-    		
-    		
-    		
-    	
-    	
-    	
     	}
     }
 

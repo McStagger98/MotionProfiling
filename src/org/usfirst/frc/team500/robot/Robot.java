@@ -22,6 +22,7 @@ import motion_profiling.MotionProfile;
 public class Robot extends IterativeRobot {
 	public static RobotHardware bot = null;
 	public static DrivetrainSubsystem drivetrain = null; 
+	private static long startTime;
 	
     /**
      * This function is run when the robot is first started up and should be
@@ -76,12 +77,14 @@ public class Robot extends IterativeRobot {
     	//MotionProfile rightProfile = new MotionProfile(DrivetrainSubsystem.getRightMaster(), GeneratedMotionProfile.Points);
     
     	(new MotionProfileCommand(GeneratedMotionProfile.Points, GeneratedMotionProfile.Points)).start();
+    	startTime = System.currentTimeMillis();
     }
 
     /**
      * This function is called periodically during autonomous
      */
     public void autonomousPeriodic() {
+    	DrivetrainSubsystem.getInstance().populateLog(startTime);
         Scheduler.getInstance().run();
     }
 
@@ -103,7 +106,7 @@ public class Robot extends IterativeRobot {
     	catch (NullPointerException e){
     		e.printStackTrace();
     	}
-    	
+    	startTime = System.currentTimeMillis();
     }
 
     /**
@@ -111,6 +114,7 @@ public class Robot extends IterativeRobot {
      */
     public void teleopPeriodic() {
     	//SmartDashboard.putNumber("pressure", CyberShooterSubsystem.getPressure());
+    	DrivetrainSubsystem.getInstance().populateLog(startTime);
     	Scheduler.getInstance().run();
     	
     }
