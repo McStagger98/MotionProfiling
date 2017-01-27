@@ -39,7 +39,7 @@ public class DrivetrainSubsystem extends Subsystem {
 	private double[][] pointsRight;
 	private double[][] pointsLeft;
 
-	private boolean isFinished = false;  
+	private static boolean isFinished = false;  
 	
 	public class PeriodicRunnableRight implements Runnable {
 	    public void run() {  
@@ -92,7 +92,11 @@ public class DrivetrainSubsystem extends Subsystem {
     	rightMaster.enableBrakeMode(false);
     	leftMaster.enableBrakeMode(false);
     	
-    	rightMaster.changeMotionControlFramePeriod(5);
+    	
+	}
+	
+	public void initProfiler(){
+		rightMaster.changeMotionControlFramePeriod(5);
 		rightMaster.changeControlMode(CANTalon.TalonControlMode.MotionProfile);
 		rightMaster.clearMotionProfileTrajectories();
 		rightMaster.set(setValue.value);
@@ -354,6 +358,9 @@ public class DrivetrainSubsystem extends Subsystem {
 		Instrumentation.process(statusLeft);
 		Instrumentation.process(statusRight);
 	}
+    public boolean profileIsFinished(){
+    	return isFinished;
+    }
 
     public void reset() {
 		/*

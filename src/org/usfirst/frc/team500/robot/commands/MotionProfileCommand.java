@@ -12,12 +12,14 @@ import motion_profiling.MotionProfile;
 public class MotionProfileCommand extends Command {
 	double[][] leftProfile, rightProfile;
 	
-    public MotionProfileCommand(MotionProfile leftProfile, MotionProfile rightProfile) {
+    public MotionProfileCommand(double[][] leftProfile, double[][] rightProfile) {
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
     	
-   
+    	this.leftProfile = leftProfile;
+    	this.rightProfile = rightProfile;
     	requires(DrivetrainSubsystem.getInstance());
+    	DrivetrainSubsystem.getInstance().initProfiler();
     }
     
 
