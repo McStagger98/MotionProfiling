@@ -29,6 +29,7 @@ public class DrivetrainSubsystem extends Subsystem {
 	private double talonLeftPos, talonRightPos, talonLeftRPM, talonRightRPM, rightSpeed, leftSpeed;
 	private boolean firstLogFileRun = true;
 	private int state = 0;
+	private int startEncoderCounts;
 	private static final int kMinPointsInTalon = 10;
 	static final int kNumLoopsTimeout = 10;
 	
@@ -66,21 +67,22 @@ public class DrivetrainSubsystem extends Subsystem {
 		rightSlave = Robot.bot.getCANTalonObj(3);
 		
 		leftMaster.reverseSensor(false);
-		rightMaster.reverseSensor(false);
+		rightMaster.reverseSensor(true);
 		
 		leftMaster.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
 		rightMaster.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
 		
+		//These are the original settings 
 		leftMaster.configEncoderCodesPerRev(360);
 		rightMaster.configEncoderCodesPerRev(360);
 		
 		
-		leftMaster.setF(1.511524822);
-		rightMaster.setF(1.065625);
 		
-		leftMaster.setP(0);
-		rightMaster.setP(.065);
-		rightMaster.setI(.001);
+		leftMaster.setF(1.50220264);
+		rightMaster.setF(1.51780415);
+		
+		//rightMaster.setP(.065);
+		//rightMaster.setI(.001);
 		
 		
 		rightMaster.reverseOutput(true);
@@ -133,8 +135,7 @@ public class DrivetrainSubsystem extends Subsystem {
     		//Robot.bot.getCANTalonObj(3).set(scaleInput(rightSpeed));
     	}
     	else{
-    		this.leftSpeed = -leftSpeed;
-    		this.rightSpeed = rightSpeed;
+    		
     		leftMaster.set(-leftSpeed);
 	    	rightMaster.set(rightSpeed);
 	    	//leftSlave.set(-leftSpeed);
@@ -244,6 +245,11 @@ public class DrivetrainSubsystem extends Subsystem {
 	}
 	public void backwardsFullVelocity(){
 		setMotorOutputs(-1,-1,false);
+	}
+	
+	public void resetEncoders(){
+		leftMaster.setPosition(0);
+		rightMaster.setPosition(0);
 	}
 	
     public void tankDrive(double leftValue, double rightValue, boolean scaledInputs) {
@@ -473,21 +479,25 @@ public class DrivetrainSubsystem extends Subsystem {
     	difTime = curTime - lastTime;
     	
     	if (difTime >= 100){
-        	talonLeftPos = DrivetrainSubsystem.getInstance().getLeftMaster().getEncPosition();
-    		talonLeftRPM = DrivetrainSubsystem.getInstance().getLeftMaster().getSpeed();
-    		talonRightPos = DrivetrainSubsystem.getInstance().getRightMaster().getEncPosition();
-    		talonRightRPM = DrivetrainSubsystem.getInstance().getRightMaster().getSpeed();
-
+        	talonLeftPos = leftMaster.getEncPosition();
+    		talonLeftRPM = leftMaster.getSpeed();
+    		talonRightPos = rightMaster.getEncPosition();
+    		talonRightRPM = rightMaster.getSpeed();
+    		leftSpeed = leftMaster.getEncVelocity();
+    		rightSpeed = rightMaster.getEncVelocity();
+    	
         	System.out.format("%s\n", "Time," + (curTime-startTime)/1000);
     		System.out.format("%s\n", "Talon left position: " + talonLeftPos);
     		System.out.format("%s\n", "Talon left rpm: " +  talonLeftRPM);
     		System.out.format("%s\n", "Talon right position: " + talonRightPos);
     		System.out.format("%s\n", "Talon right rpm: " +  talonRightRPM);
+    		System.out.format("%s\n", "Talon right velocity: " + rightSpeed);
+    		System.out.format("%s\n", "Talon left velocity: " +  leftSpeed);
     		lastTime = curTime;
     	}
     	
-		SmartDashboard.putNumber("talon right throttle", rightSpeed);
-		SmartDashboard.putNumber("Talon left Throttle", leftSpeed);
+		SmartDashboard.putNumber("talon right velocity", rightSpeed);
+		SmartDashboard.putNumber("Talon left velocity", leftSpeed);
 		SmartDashboard.putNumber("Talon left Position", talonLeftPos);
 		SmartDashboard.putNumber("Talon left rpm", talonLeftRPM);
 		SmartDashboard.putNumber("Talon right Position", -talonRightPos);

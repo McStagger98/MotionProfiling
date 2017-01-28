@@ -32,7 +32,6 @@ public class Robot extends IterativeRobot {
     	bot = new RobotHardwareProgrammingBot();		//change for different robots
     	bot.initialize();
     	OI.initialize();
-    	drivetrain = DrivetrainSubsystem.getInstance();	//Instantiate DriveTrain subsystem 
     }
 	
 	/**
@@ -95,6 +94,7 @@ public class Robot extends IterativeRobot {
         // this line or comment it out.
        // if (autonomousCommand != null) autonomousCommand.cancel();
     	DrivetrainSubsystem.getInstance().percentVoltageMode();
+    	DrivetrainSubsystem.getInstance().resetEncoders();
     	(new ArcadeDriveCommand()).start();
     	
     	
