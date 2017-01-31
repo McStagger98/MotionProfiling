@@ -2,8 +2,9 @@ package org.usfirst.frc.team500.robot;
 
 import com.ctre.CANTalon;
 
+
+
 public class RobotHardwareProgrammingBot extends RobotHardware {
-	
 	private static CANTalon frontLeftMotor;
 	private static CANTalon frontRightMotor; 
 	private static CANTalon backLeftMotor;
@@ -40,4 +41,6 @@ public class RobotHardwareProgrammingBot extends RobotHardware {
 	public String getName(){
 		return "ProgrammingBot";
 	}
+	
+	
 }

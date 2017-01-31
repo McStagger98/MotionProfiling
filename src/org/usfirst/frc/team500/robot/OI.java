@@ -1,10 +1,9 @@
 package org.usfirst.frc.team500.robot;
 
-import org.usfirst.frc.team500.robot.subsystems.CyberShooterSubsystem.Pressure;
+import org.usfirst.frc.team500.robot.commands.RunMotionProfileCommand;
 
-import cyber_commands.CyberPressurizeCommand;
-import cyber_commands.CyberShootCommand;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.buttons.Button;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
 
 /**
@@ -47,7 +46,7 @@ public class OI {
 	private static JoystickButton safety2 = new JoystickButton(joystick, 6);
 	
 	public static void initialize(){
-		aPressed.whenPressed(new CyberShootCommand());
+		//aPressed.whenPressed(new CyberShootCommand());
 		//pressureButton.whenPressed(new CyberPressurizeCommand(Pressure.MID));
 	}
 	

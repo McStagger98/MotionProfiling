@@ -82,5 +82,4 @@ public abstract class RobotHardware {
 	public void setBot(RobotHardware r)
 	{
 		dummyBot = r;
-	}
-}
+	}}
