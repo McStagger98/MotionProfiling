@@ -28,7 +28,7 @@ public class MotionProfileCommand extends Command {
     	// Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
     	PathPlanner planner = new PathPlanner(waypoints);
-    	planner.calculate(maxTime, Constants.ITP, Constants.WHEEL_BASE);
+    	planner.calculate(maxTime, Constants.ITP, Constants.WHEEL_BASE/12);
     	this.leftProfile = planner.getLeftProfile();
     	this.rightProfile = planner.getRightProfile();
     	requires(DrivetrainSubsystem.getInstance());
