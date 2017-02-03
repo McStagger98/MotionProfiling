@@ -23,7 +23,10 @@ public class Constants {
 
 	public static double SHOOTER_MAX_SPEED = 2500; //6500 //6300;//per 10ms
 	
-	public static double WHEEL_BASE = 23.0;//inches	
+	public static double WHEEL_BASE = 25.0;//inches	
+	
+	//loop time
+	public static double ITP = 0.1;
 	
 	public static int TALON_DRIVE_LEFT_MASTER = 2;
 	public static int TALON_DRIVE_RIGHT_MASTER  = 1;
@@ -45,7 +48,6 @@ public class Constants {
 	public static int TALON_RIGHT_SHOOTER = 4;
 	public static int TALON_ACTUATOR = 5;
 
-	public static double WHEEL_DIAMETER = 5 + 7.0/8.0 + 3.0/25.4;//inches
 	
 	public static double ANGLE_MOTOR_UP_F = 0;
 	public static double ANGLE_MOTOR_UP_P = 40;
@@ -63,9 +65,10 @@ public class Constants {
 	public static double ANGLE_MOTOR_DOWN_RAMP_RATE = 1;
 	public static int ANGLE_MOTOR_DOWN_PROFILE = 0;
 	
-	//Physical attributes
-	public static final int ENCODER_TICKS_RESOLUTION = 8192;//ticks
-	public static final int ENCODER_TICKS_CPR = ENCODER_TICKS_RESOLUTION / 4;
+	//attributes
+	public static int COUNTS_PER_REVOLUTION = 360;
+	public static double WHEEL_DIAMETER = 8;
+	
 
 	//Rabbot Drive specifications
 	public static final double GEAR_RATIO = 1;
@@ -79,8 +82,6 @@ public class Constants {
 	public static final double DEFENSE_TOP_WIDTH = 4*12;//inches
 	
 	
-	//Inches per tick
-	public static double INCHES_PER_TICK = Math.PI * WHEEL_DIAMETER / (GEAR_RATIO * ENCODER_TICKS_RESOLUTION);
 	
 	public static final int JOYSTICK_CHANNEL = 0;
 	public static final int BUTTONBOARD_CHANNEL = 1;

@@ -1,6 +1,8 @@
 package org.usfirst.frc.team500.robot.commands;
 
+import org.usfirst.frc.team500.robot.motionProfile.PathPlanner;
 import org.usfirst.frc.team500.robot.subsystems.DrivetrainSubsystem;
+import org.usfirst.frc.team500.robot.utils.Constants;
 
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -18,6 +20,17 @@ public class MotionProfileCommand extends Command {
     	
     	this.leftProfile = leftProfile;
     	this.rightProfile = rightProfile;
+    	requires(DrivetrainSubsystem.getInstance());
+    	DrivetrainSubsystem.getInstance().profileInit(rightProfile, leftProfile);
+    }
+    
+    public MotionProfileCommand(double[][] waypoints, double maxTime){
+    	// Use requires() here to declare subsystem dependencies
+        // eg. requires(chassis);
+    	PathPlanner planner = new PathPlanner(waypoints);
+    	planner.calculate(maxTime, Constants.ITP, Constants.WHEEL_BASE);
+    	this.leftProfile = planner.getLeftProfile();
+    	this.rightProfile = planner.getRightProfile();
     	requires(DrivetrainSubsystem.getInstance());
     	DrivetrainSubsystem.getInstance().profileInit(rightProfile, leftProfile);
     }
