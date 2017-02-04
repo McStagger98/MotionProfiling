@@ -1,0 +1,30 @@
+package org.usfirst.frc.team500.robot;
+import org.usfirst.frc.team500.robot.commands.ClimbCommand;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.buttons.JoystickButton;
+
+	private static Joystick joystick = new Joystick(0);
+	
+		public static JoystickButton climb = new JoystickButton(joystick, 1);
+		public static JoystickButton climberAccelerator = new JoystickButton(joystick, 2);
+		public static JoystickButton climbStop = new JoystickButton(joystick, 1);
+	
+	
+	public static void initialize(){		
+		climb.whileHeld(new ClimbCommand());
+		climberAccelerator.whenPressed(new ClimbCommand());
+		climbStop.whenReleased (new ClimbCommand());
+	}
+	
+	public static boolean climb(){
+		return climb.get();
+		}
+	
+	public static boolean accelerate() {
+		return climberAccelerator.get();
+	}
+	public static boolean climbStop(){
+		return climbStop.get();
+	}
+	
+}
