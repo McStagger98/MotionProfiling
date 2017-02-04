@@ -80,7 +80,9 @@ public class Robot extends IterativeRobot {
 
 		// schedule the autonomous command (example)\
 		startTime = System.currentTimeMillis();
-		(new RunMotionProfileCommand()).start();
+		double[][] firstPoints = {{0,13.5},{5,13.5},{8,13.5}};
+		RunMotionProfileCommand firstCommand = new RunMotionProfileCommand(firstPoints,8);
+		firstCommand.start();
 		
 	}
 
@@ -89,7 +91,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		DrivetrainSubsystem.getInstance().populateLog(startTime);
+		//DrivetrainSubsystem.getInstance().populateLog(startTime);
 		Scheduler.getInstance().run();
 	}
 

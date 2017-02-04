@@ -2,66 +2,41 @@ package org.usfirst.frc.team500.robot.subsystems;
 
 import org.usfirst.frc.team500.robot.Robot;
 import org.usfirst.frc.team500.robot.RobotMap;
+import org.usfirst.frc.team500.robot.motionProfile.TrapezoidThread;
 
 import com.ctre.CANTalon;
 import com.ctre.CANTalon.TalonControlMode;
 
 import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import motion_profiling.Instrumentation;
+
  
 /**
  *
  */
+/**
+*
+*/
 public class DrivetrainSubsystem extends Subsystem {
-	
-	static CANTalon leftMaster;
-	static CANTalon leftSlave;
-	static CANTalon rightMaster;
-	static CANTalon rightSlave;
-	
-	private CANTalon.SetValueMotionProfile setValue = CANTalon.SetValueMotionProfile.Disable;
-	private CANTalon.MotionProfileStatus statusRight = new CANTalon.MotionProfileStatus();
-	private CANTalon.MotionProfileStatus statusLeft = new CANTalon.MotionProfileStatus();
-	
-	private long curTime, difTime, lastTime;         
-	private double talonLeftPos, talonRightPos, talonLeftRPM, talonRightRPM, rightSpeed, leftSpeed;
-	private boolean firstLogFileRun = true;
-	private int state = 0;
-	private int startEncoderCounts;
-	private static final int kMinPointsInTalon = 10;
-	static final int kNumLoopsTimeout = 10;
-	
-	private int loopTimeout = -1;
-	private double[][] pointsRight;
-	private double[][] pointsLeft;
 
-	private static boolean isFinished = false;  
+   // Put methods for controlling this subsystem
+   // here. Call these from Commands.
 	
-	public class PeriodicRunnableRight implements Runnable {
-	    public void run() {  
-	    	rightMaster.processMotionProfileBuffer();
-	    }
-	}
-	
-	Notifier _notifierRight = new Notifier(new PeriodicRunnableRight());
-	
-	public class PeriodicRunnableLeft implements Runnable {
-	    public void run() {  
-	    	leftMaster.processMotionProfileBuffer();
-	    }
-	}
-	
-	Notifier _notifierLeft = new Notifier(new PeriodicRunnableLeft());
-	
-    public void initDefaultCommand() {
-        // Set the default command for a subsystem here.
-        //setDefaultCommand(new MySpecialCommand());
-    }
-    
-	private DrivetrainSubsystem(){
-		leftMaster = Robot.bot.getCANTalonObj(0);
+	static CANTalon leftMaster, leftSlave, rightMaster, rightSlave;
+	private double talonLeftPos, talonRightPos, talonLeftRPM, talonRightRPM, rightSpeed, leftSpeed;
+	private long curTime, difTime, lastTime;         
+	protected TrapezoidThread trapThread;
+	private static int currentProfileID;
+	public boolean profileHasFinished = false;
+	public boolean moveTrapezoidal = true;
+	private boolean firstLogFileRun = true;
+  
+   public DrivetrainSubsystem() {
+   	
+   	System.out.println("constructing drive train");
+   	leftMaster = Robot.bot.getCANTalonObj(0);
 		rightMaster = Robot.bot.getCANTalonObj(1);
 		leftSlave = Robot.bot.getCANTalonObj(2);
 		rightSlave = Robot.bot.getCANTalonObj(3);
@@ -72,430 +47,217 @@ public class DrivetrainSubsystem extends Subsystem {
 		leftMaster.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
 		rightMaster.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
 		
-		//These are the original settings 
 		leftMaster.configEncoderCodesPerRev(360);
 		rightMaster.configEncoderCodesPerRev(360);
 		
-		
-		
+		//leftMaster.setF(0);
+		leftMaster.setPID(0, 0, 0);
+		rightMaster.setPID(0, 0, 0);
+		leftSlave.setPID(0,0,0);
+		rightSlave.setPID(0, 0, 0);
 		leftMaster.setF(1.50220264);
 		rightMaster.setF(1.51780415);
 		
-		//rightMaster.setP(.065);
-		//rightMaster.setI(.001);
-		
-		
+		//rightMaster.setF(0);
 		rightMaster.reverseOutput(true);
 		leftMaster.reverseOutput(false);
 		
 		leftSlave.changeControlMode(TalonControlMode.Follower);
-    	rightSlave.changeControlMode(TalonControlMode.Follower);
-    	leftSlave.set(RobotMap.ProgrammingBot.leftMasterID);
-    	rightSlave.set(RobotMap.ProgrammingBot.rightMasterID);
+   	rightSlave.changeControlMode(TalonControlMode.Follower);
+   	leftSlave.set(RobotMap.ProgrammingBot.leftMasterID);
+   	rightSlave.set(RobotMap.ProgrammingBot.rightMasterID);
 		
-    	rightMaster.enableBrakeMode(false);
-    	leftMaster.enableBrakeMode(false);	
-	}
-	
-	public void profileInit(double[][] pointsRight, double[][] pointsLeft){
-		this.pointsRight = pointsRight;
-		this.pointsLeft = pointsLeft;
-		rightMaster.changeMotionControlFramePeriod(5);
-		rightMaster.changeControlMode(CANTalon.TalonControlMode.MotionProfile);
-		rightMaster.clearMotionProfileTrajectories();
-		rightMaster.set(setValue.value);
-		leftMaster.changeMotionControlFramePeriod(5);
-		leftMaster.changeControlMode(CANTalon.TalonControlMode.MotionProfile);
-		leftMaster.clearMotionProfileTrajectories();
-		leftMaster.set(setValue.value);
-		_notifierRight.startPeriodic(.005);
-		_notifierLeft.startPeriodic(.005);
-		isFinished = false; 
-	}
-	
-	
-	public CANTalon getLeftMaster(){
-		return leftMaster;
-	}
-	public CANTalon getRightMaster(){
-		return rightMaster;
-	}
-	
-    private static DrivetrainSubsystem instance = new DrivetrainSubsystem();
-    
-    public static DrivetrainSubsystem getInstance(){
-    	return instance;
-    }
-    
-    private void setMotorOutputs(double leftSpeed, double rightSpeed, boolean scaledInputs){
-    	if(scaledInputs==true){
-    		//Robot.bot.getCANTalonObj(0).set(scaleInput(-leftSpeed));
-    		//Robot.bot.getCANTalonObj(1).set(scaleInput(rightSpeed));
-    		//Robot.bot.getCANTalonObj(2).set(scaleInput(-leftSpeed));
-    		//Robot.bot.getCANTalonObj(3).set(scaleInput(rightSpeed));
-    	}
-    	else{
-    		
-    		leftMaster.set(-leftSpeed);
-	    	rightMaster.set(rightSpeed);
-	    	//leftSlave.set(-leftSpeed);
-	    	//rightSlave.set(rightSpeed);
-    	}
-    }
-    
-    public void motionProfileMode(){
-    	leftMaster.changeControlMode(TalonControlMode.MotionProfile);
-    	rightMaster.changeControlMode(TalonControlMode.MotionProfile);
-    }
-    
-    public void percentVoltageMode(){
-    	leftMaster.changeControlMode(TalonControlMode.PercentVbus);
-    	rightMaster.changeControlMode(TalonControlMode.PercentVbus);
-    	//leftSlave.changeControlMode(TalonControlMode.PercentVbus);
-    	//rightSlave.changeControlMode(TalonControlMode.PercentVbus);
-    }
-    
-    private static double limit(double num) {
-        if (num > 1.0) {
-            num= 1.0;
-        }
-        else if (num < -1.0) {
-            num= -1.0;
-        }
-        	return num;
-    } 
-    
-    //doesn't work
-	private double scaleInput(double dVal)  {
-		double[] scaleArray = { 0.0, 0.0, 0.03, 0.06, 0.09, 0.13, 0.17, 0.21,
-				0.26, 0.31, 0.36, 0.41, 0.47, 0.53, 0.61, .80, 1.00 };
-		
-		// get the corresponding index for the scaleInput array.
-		boolean neg = false;
-		if(dVal<0){
-			neg = true;
-		}
-		/*	//joystick position function
-		dVal = Math.abs(dVal);
-		int index = (int) (dVal * 16.0);
-		if (index > 16){
-			index = 16;
+   	rightMaster.enableBrakeMode(false);
+   	leftMaster.enableBrakeMode(false);	
+   	    	
+   	trapThread = new TrapezoidThread(leftMaster, rightMaster);	
+   }
+   
+   private void waitForTrapezoidalFinish() {
+		while(true){
+			String tempString = getTrapStatus();
+			int id = getTrapID();
+			//System.out.println("[Nav} navID "+ currentProfileID +":" + tempString+ " netID:" + id);
+			if(tempString.equals("finished") && (id == currentProfileID)){
+				//currentProfileID++;
+				profileHasFinished = true;
+				break;
+			}
 		}
 		
-		double dScale = 0.0;
-		if (neg==true) {
-			dScale = -scaleArray[index];
-		} else {
-			dScale = scaleArray[index];
-		}*/
-		
-		//time function
-		double dScale = 0;
-		if(dVal>RobotMap.Cyber.driveValue || dVal == 1){
-			RobotMap.Cyber.driveCounter++;
-			RobotMap.Cyber.driveValue = dVal;
-		}
-		else if(dVal<RobotMap.Cyber.driveValue || dVal == -1){
-			RobotMap.Cyber.driveCounter--;
-			RobotMap.Cyber.driveValue = dVal;
+	}
+   public CANTalon getLeftMaster(){
+   	return leftMaster;
+   }
+   public CANTalon getRightMaster(){
+   	return rightMaster;
+   }
+   
+   public void runProfileLeftRight(double[][] leftPoints, double[][] rightPoints){
+   	System.out.println("runPofileLeftRight");
+   	profileHasFinished = false;
+		currentProfileID++;
+		startTrapezoidControl(leftPoints,rightPoints,currentProfileID);
+		waitForTrapezoidalFinish();
+		System.out.println("Time: " + Timer.getFPGATimestamp());		
+	}
+   
+	public void startTrapezoidControl(double[][] leftPoints, double[][] rightPoints,int trapID) {	
+		System.out.println("startTrapezoidControl");
+		trapThread.activateTrap(leftPoints, rightPoints, trapID);
+	}
+
+	
+	public void stopTrapezoidControl() {
+		System.out.println("stopTrapezoidControl");
+		trapThread.resetTrapezoid();
+	}
+	
+	public synchronized  int getTrapID(){
+		return trapThread.getID();
+	}
+
+	public synchronized String getTrapStatus(){
+		return trapThread.getStatus();
+	}
+   
+   public void percentVoltageMode(){
+   	leftMaster.changeControlMode(TalonControlMode.PercentVbus);
+   	rightMaster.changeControlMode(TalonControlMode.PercentVbus);
+   	//leftSlave.changeControlMode(TalonControlMode.PercentVbus);
+   	//rightSlave.changeControlMode(TalonControlMode.PercentVbus);
+   }
+    public void initDefaultCommand() {
+       // Set the default command for a subsystem here.
+       //setDefaultCommand(new MySpecialCommand());
+   }
+    public void resetEncoders(){
+   	 System.out.println("reset encoders");
+   	 leftMaster.setPosition(0);
+		rightMaster.setPosition(0);
+	}
+    
+	private static DrivetrainSubsystem instance = new DrivetrainSubsystem();
+	
+	public static DrivetrainSubsystem getInstance(){
+		return instance;
+	}
+	
+	private static void setMotorOutputs(double leftSpeed, double rightSpeed, boolean sensitivity){
+		if(sensitivity){
+			//leftSpeed = setDriveSensitivity(leftSpeed);
+			//rightSpeed = setDriveSensitivity(rightSpeed);
+		}		
+		leftMaster.set(-leftSpeed);   // front Left 
+		rightMaster.set(rightSpeed);  // front Right 
+	}
+	
+	/*private static double setDriveSensitivity(double input){
+		if (!Robot.bot.getName().equals("ProgrammingBot")){
+			input = RobotMap.DRIVE_SENSITIVITY*Math.pow(input, 3) + (1-RobotMap.DRIVE_SENSITIVITY)*input;
+			return input;
 		}
 		else{
-			RobotMap.Cyber.driveValue = dVal;
+			return (Double) null;
 		}
-		if(neg==true){
-			dScale = -scaleArray[RobotMap.Cyber.driveCounter];
-		}
-		else if(neg == false){
-			dScale = scaleArray[RobotMap.Cyber.driveCounter];
-		}
-		return dScale;
-	}
-    
-	public void arcadeDrive(double moveValue, double rotateValue, boolean scaledInputs) {
-        double leftMotorSpeed;
-        double rightMotorSpeed;
-        
-        moveValue = limit(moveValue);
-        rotateValue = limit(rotateValue);
-        percentVoltageMode();
-
-        if (moveValue > 0.0) { 
-            if (rotateValue > 0.0) {
-                leftMotorSpeed = moveValue - rotateValue;
-                rightMotorSpeed = Math.max(moveValue, rotateValue);
-            } else {
-                leftMotorSpeed = Math.max(moveValue, -rotateValue);
-                rightMotorSpeed = moveValue + rotateValue;
-            }
-        } else {
-            if (rotateValue > 0.0) {
-                leftMotorSpeed = -Math.max(-moveValue, rotateValue);
-                rightMotorSpeed = moveValue + rotateValue;
-            } else {
-                leftMotorSpeed = moveValue - rotateValue;
-                rightMotorSpeed = -Math.max(-moveValue, -rotateValue);
-            }
-        }
-       
-        setMotorOutputs(leftMotorSpeed, rightMotorSpeed, scaledInputs);
-    }
+		
+	}*/
 	
-	public void forwardFullVelocity(){
+	public void shiftGears(boolean gear){
+		/*
+		SmartDashboard.putString("Drivetrain ShiftGears","True");
+		if(gear){
+			SmartDashboard.putString("Drivetrain Shift to high","True");
+			drivetrainSolenoid.set(true);
+			RobotMap.currentGear = true;
+		}
+		else{
+			SmartDashboard.putString("Drivetrain Shift to high","false");
+			drivetrainSolenoid.set(false);
+			RobotMap.currentGear = false;
+		}*/
+	}
+	
+   private static double limit(double num) {
+       if (num > 1.0) {
+           num= 1.0;
+       }
+       else if (num < -1.0) {
+           num= -1.0;
+       }
+       	return num;
+   }
+   
+   public void backwardsFullVelocity(){
 		setMotorOutputs(1,1,false);
 	}
-	public void backwardsFullVelocity(){
+	public void forwardsFullVelocity(){
 		setMotorOutputs(-1,-1,false);
 	}
 	
-	public void resetEncoders(){
-		leftMaster.setPosition(0);
-		rightMaster.setPosition(0);
-	}
+   	
+	public void arcadeDrive(double moveValue, double rotateValue, boolean sensitivity) {
+       double leftMotorSpeed;
+       double rightMotorSpeed;
+
+       moveValue = limit(moveValue);
+       rotateValue = limit(rotateValue);
+
+       if (moveValue > 0.0) {
+           if (rotateValue > 0.0) {
+               leftMotorSpeed = moveValue - rotateValue;
+               rightMotorSpeed = Math.max(moveValue, rotateValue);
+           } else {
+               leftMotorSpeed = Math.max(moveValue, -rotateValue);
+               rightMotorSpeed = moveValue + rotateValue;
+           }
+       } else {
+           if (rotateValue > 0.0) {
+               leftMotorSpeed = -Math.max(-moveValue, rotateValue);
+               rightMotorSpeed = moveValue + rotateValue;
+           } else {
+               leftMotorSpeed = moveValue - rotateValue;
+               rightMotorSpeed = -Math.max(-moveValue, -rotateValue);
+           }
+       }
+       setMotorOutputs(leftMotorSpeed, rightMotorSpeed,sensitivity);
+   }
 	
-    public void tankDrive(double leftValue, double rightValue, boolean scaledInputs) {
-        leftValue = limit(leftValue);
-        rightValue = limit(rightValue);
-        setMotorOutputs(leftValue, rightValue, scaledInputs);
-    }
-    
-    public void control() {
-		/* Get the motion profile status every loop */
-		rightMaster.getMotionProfileStatus(statusRight);
-		leftMaster.getMotionProfileStatus(statusLeft);
-		System.out.format("%s\n", "Got Status");
-		
-  		/*
-		 * track time, this is rudimentary but that's okay, we just want to make
-		 * sure things never get stuck.
-		 */
-		
-		if (loopTimeout < 0) {
-			/* do nothing, timeout is disabled */
-		} else {
-			/* our timeout is nonzero */
-			if (loopTimeout == 0) {
-				/*
-				 * something is wrong. Talon is not present, unplugged, breaker tripped
-				 */
-				Instrumentation.OnNoProgress();
-			} else {
-				loopTimeout--;
-			}
-		}
+   public void tankDrive(double leftValue, double rightValue, boolean sensitivity) {
 
-		/* first check if we are in MP mode */
-		if ((rightMaster.getControlMode() != TalonControlMode.MotionProfile)&&(leftMaster.getControlMode() != TalonControlMode.MotionProfile)) {
-			/*
-			 * we are not in MP mode. We are probably driving the robot around
-			 * using gamepads or some other mode.
-			 */
-			System.out.format("%s\n", "Not in Motion Profile Mode");
-			state = 0;
-			loopTimeout = -1;                      
-		} else {
-			/*
-			 * we are in MP control mode. That means: starting Mps, checking Mp
-			 * progress, and possibly interrupting MPs if thats what you want to
-			 * do.
-			 */
-			System.out.format("%s\n", "State = " + state);
-			switch (state) {
-				case 0: /* wait for application to tell us to start an MP */
-						setValue = CANTalon.SetValueMotionProfile.Disable;
-						startFilling();
-						/*
-						 * MP is being sent to CAN bus, wait a small amount of time
-						 */
-						state = 1;
-						loopTimeout = kNumLoopsTimeout;
-					break;
-				case 1: /*
-						 * wait for MP to stream to Talon, really just the first few
-						 * points
-						 */
-					/* do we have a minimum numberof points in Talon */
-					System.out.format("%s\n", "Waiing for Stream to build on Talon");
-					System.out.format("%s\n", "right bottom buffer count: " + statusRight.btmBufferCnt);
-					System.out.format("%s\n", "left bottom buffer count: " + statusLeft.btmBufferCnt);
-					if ((statusRight.btmBufferCnt > kMinPointsInTalon) &&(statusLeft.btmBufferCnt > kMinPointsInTalon)) {
-						/* start (once) the motion profile */
-						System.out.format("%s\n", "Enabling Profile");
-						setValue = CANTalon.SetValueMotionProfile.Enable;
-						/* MP will start once the control frame gets scheduled */
-						state = 2;
-						loopTimeout = kNumLoopsTimeout;
-					}
-					break;
-				case 2: /* check the status of the MP */
-					/*
-					 * if talon is reporting things are good, keep adding to our
-					 * timeout. Really this is so that you can unplug your talon in
-					 * the middle of an MP and react to it.
-					 */
-					if ((statusRight.isUnderrun == false)&&(statusLeft.isUnderrun == false)) {
-						loopTimeout = kNumLoopsTimeout;
-						System.out.format("%s\n", "Things as fine-noting to do!!");
-					}
-					
-					/*
-					 * If we are executing an MP and the MP finished, start loading
-					 * another. We will go into hold state so robot servo's
-					 * position.
-					 */
-					if ((statusRight.activePointValid && statusRight.activePoint.isLastPoint)&&(statusLeft.activePointValid && statusLeft.activePoint.isLastPoint)) {
-						/*
-						 * because we set the last point's isLast to true, we will
-						 * get here when the MP is done
-						 */
-						System.out.format("%s\n", "Finished!! time:" + System.currentTimeMillis());
-						setValue = CANTalon.SetValueMotionProfile.Hold;
-						state = 3;
-						loopTimeout = -1;
-						isFinished = true;
-						
-					}
-					break;
-			}
-		}
+       // square the inputs (while preserving the sign) to increase fine control while permitting full power
+       leftValue = limit(leftValue);
+       rightValue = limit(rightValue);
 
-		System.out.format("%s\n", "Set value.value: " + setValue.value);
-		System.out.format("%s\n", "mode Right:" + rightMaster.getControlMode());
-		System.out.format("%s\n", "mode Left:" + leftMaster.getControlMode());
-		
-		rightMaster.set(setValue.value);
-		leftMaster.set(setValue.value);
-		
-		/* printfs and/or logging */
-		Instrumentation.process(statusLeft);
-		Instrumentation.process(statusRight);
-	}
-    
-    public boolean profileIsFinished(){
-    	return isFinished;
-    }
-
-    public void reset() {
-		/*
-		 * Let's clear the buffer just in case user decided to disable in the
-		 * middle of an MP, and now we have the second half of a profile just
-		 * sitting in memory.
-		 */
-		rightMaster.clearMotionProfileTrajectories();
-		leftMaster.clearMotionProfileTrajectories();
-			
-		/* When we do re-enter motionProfile control mode, stay disabled. */
-		setValue = CANTalon.SetValueMotionProfile.Disable;
-		/* When we do start running our state machine start at the beginning. */
-		state = 0;
-		loopTimeout = -1;
-		/*
-		 * If application wanted to start an MP before, ignore and wait for next
-		 * button press
-		 */
-		isFinished = false; 
-		rightMaster.set(setValue.value);
-		leftMaster.set(setValue.value);
-	}
-    
-    private void startFilling() {
-		System.out.format("%s\n", "Start Filling Buffer");
-		System.out.format("%s\n", "points in profile "+ pointsRight.length);
-		/* create an empty point */
-		CANTalon.TrajectoryPoint pointRight = new CANTalon.TrajectoryPoint();
-		CANTalon.TrajectoryPoint pointLeft = new CANTalon.TrajectoryPoint();
-
-		/* did we get an underrun condition since last time we checked ? */
-		if (statusRight.hasUnderrun) {
-			/* better log it so we know about it */
-			Instrumentation.OnUnderrun();
-			/*
-			 * clear the error. This flag does not auto clear, this way 
-			 * we never miss logging it.
-			 */
-			rightMaster.clearMotionProfileHasUnderrun();
-			
-		}
-		if (statusLeft.hasUnderrun){
-			Instrumentation.OnUnderrun();
-			leftMaster.clearMotionProfileHasUnderrun();
-		}
-		/*
-		 * just in case we are interrupting another MP and there is still buffer
-		 * points in memory, clear it.
-		 */
-		rightMaster.clearMotionProfileTrajectories();
-		leftMaster.clearMotionProfileTrajectories();
-
-		/* This is fast since it's just into our TOP buffer */
-		for (int i = 0; i < pointsRight.length; ++i) {
-			/* for each point, fill our structure and pass it to API */
-			pointRight.position = pointsRight[i][0];
-			pointRight.velocity = pointsRight[i][1];
-			pointRight.timeDurMs = (int) pointsRight[i][2];
-			pointRight.profileSlotSelect = 0; /* which set of gains would you like to use? */
-			pointRight.velocityOnly = false; /* set true to not do any position
-										 * servo, just velocity feedforward
-										 */
-			pointRight.zeroPos = false;
-			if (i == 0)
-				pointRight.zeroPos = true; /* set this to true on the first point */
-
-			pointRight.isLastPoint = false;
-			if ((i + 1) == pointsRight.length)
-				pointRight.isLastPoint = true; /* set this to true on the last point  */
-
-				
-			rightMaster.pushMotionProfileTrajectory(pointRight);
-		}
-		for (int i = 0; i < pointsLeft.length; ++i) {
-			/* for each point, fill our structure and pass it to API */
-			pointLeft.position = pointsLeft[i][0];
-			pointLeft.velocity = pointsLeft[i][1];
-			pointLeft.timeDurMs = (int) pointsLeft[i][2];
-			pointLeft.profileSlotSelect = 0; /* which set of gains would you like to use? */
-			pointLeft.velocityOnly = false; /* set true to not do any position
-										 * servo, just velocity feedforward
-										 */
-			pointLeft.zeroPos = false;
-			if (i == 0)
-				pointLeft.zeroPos = true; /* set this to true on the first point */
-
-			pointLeft.isLastPoint = false;
-			if ((i + 1) == pointsRight.length)
-				pointLeft.isLastPoint = true; /* set this to true on the last point  */
-
-				
-			leftMaster.pushMotionProfileTrajectory(pointLeft);
-		}
-		System.out.format("%s\n", "Points Path has been loaded !!");
-	}
-  
-    public void populateLog(long startTime){
-    	if (firstLogFileRun){
-    		lastTime = startTime;
-    		firstLogFileRun = false;
-    	}
-    	curTime = System.currentTimeMillis();
-    	difTime = curTime - lastTime;
-    	
-    	if (difTime >= 100){
-        	talonLeftPos = leftMaster.getEncPosition();
-    		talonLeftRPM = leftMaster.getSpeed();
-    		talonRightPos = rightMaster.getEncPosition();
-    		talonRightRPM = rightMaster.getSpeed();
-    		leftSpeed = leftMaster.getEncVelocity();
-    		rightSpeed = rightMaster.getEncVelocity();
-    	
-        	System.out.format("%s\n", "Time," + (curTime-startTime)/1000);
-    		System.out.format("%s\n", "Talon left position: " + talonLeftPos);
-    		System.out.format("%s\n", "Talon left rpm: " +  talonLeftRPM);
-    		System.out.format("%s\n", "Talon right position: " + talonRightPos);
-    		System.out.format("%s\n", "Talon right rpm: " +  talonRightRPM);
-    		System.out.format("%s\n", "Talon right velocity: " + rightSpeed);
-    		System.out.format("%s\n", "Talon left velocity: " +  leftSpeed);
-    		lastTime = curTime;
-    	}
-    	
+       setMotorOutputs(leftValue, rightValue, sensitivity);
+   }    
+   
+   public void populateLog(long startTime){
+   	if (firstLogFileRun){
+   		lastTime = startTime;
+   		firstLogFileRun = false;
+   	}
+   	curTime = System.currentTimeMillis();
+   	difTime = curTime - lastTime;
+   	
+   	if (difTime >= 100){
+       	talonLeftPos = leftMaster.getEncPosition();
+   		talonLeftRPM = leftMaster.getSpeed();
+   		talonRightPos = rightMaster.getEncPosition();
+   		talonRightRPM = rightMaster.getSpeed();
+   		leftSpeed = leftMaster.getEncVelocity();
+   		rightSpeed = rightMaster.getEncVelocity();
+   	
+       	System.out.format("%s\n", "Time," + (curTime-startTime)/1000);
+   		System.out.format("%s\n", "Talon left position: " + talonLeftPos);
+   		System.out.format("%s\n", "Talon left rpm: " +  talonLeftRPM);
+   		System.out.format("%s\n", "Talon right position: " + talonRightPos);
+   		System.out.format("%s\n", "Talon right rpm: " +  talonRightRPM);
+   		System.out.format("%s\n", "Talon right velocity: " + rightSpeed);
+   		System.out.format("%s\n", "Talon left velocity: " +  leftSpeed);
+   		lastTime = curTime;
+   	}
+   	
 		SmartDashboard.putNumber("Talon right velocity", rightSpeed);
 		SmartDashboard.putNumber("Talon left velocity", leftSpeed);
 		SmartDashboard.putNumber("Talon left Position", talonLeftPos);
@@ -503,7 +265,7 @@ public class DrivetrainSubsystem extends Subsystem {
 		SmartDashboard.putNumber("Talon right Position", -talonRightPos);
 		SmartDashboard.putNumber("Talon right rpm", -talonRightRPM);
 		SmartDashboard.putNumber("Time", (curTime-startTime)/1000);
-    	
-    }
+   	
+   }
 }
 

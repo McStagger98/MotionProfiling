@@ -40,6 +40,7 @@ public class TrapezoidThread implements Runnable{
 	public void run() {	
 		if(hasTrapTask) {
 				//start the motion profile(Teleop periodic)	
+			System.out.println("trapezoidthreah:run");
 				if(leftProfile.getSetValue() != CANTalon.SetValueMotionProfile.Hold) 
 					leftProfile.control();
 				
@@ -77,7 +78,7 @@ public class TrapezoidThread implements Runnable{
 	}
 	
 	public synchronized void activateTrap(double[][] leftPoints, double[][] rightPoints, int id) {
-		
+		System.out.println("activate trap");
 		this.leftPoints = leftPoints;
 		this.rightPoints = rightPoints;
 		
@@ -98,20 +99,24 @@ public class TrapezoidThread implements Runnable{
 	}
 
 	private void setProfiles() {
+		System.out.println("set profiles");
 		//leftExample.setProfile(TrapezoidControl.motionProfileUtility(leftRotations, leftVel, leftTalon.getEncPosition()));
 		//rightExample.setProfile(TrapezoidControl.motionProfileUtility(rightRotations, rightVel, rightTalon.getEncPosition()));
 		leftProfile.setProfile(leftPoints);
 		rightProfile.setProfile(rightPoints);
+		
 	}
 	
 	
 	
-	private void initializeTalons() {		
+	private void initializeTalons() {	
+		System.out.println("initialize talons");
 	 	leftTalon.changeControlMode(TalonControlMode.MotionProfile);
 	 	rightTalon.changeControlMode(TalonControlMode.MotionProfile);
 	}
 	
 	public void resetTrapezoid() {
+		System.out.println("reset trapezoid");
 		leftProfile.reset();
 		rightProfile.reset();
 	}

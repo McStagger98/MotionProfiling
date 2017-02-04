@@ -17,7 +17,7 @@ public class MotionProfile {
 	private CANTalon.SetValueMotionProfile setValue = CANTalon.SetValueMotionProfile.Disable;
 	
 	//used to maintain timing
-	private static final int kMinPointsInTalon = 5;
+	private static final int kMinPointsInTalon = 15;
 	private static final int kNumLoopsTimeout = 10;
 	
 	//nested class for thread which continually pushes points to MPB
@@ -32,7 +32,7 @@ public class MotionProfile {
 	
 	public MotionProfile(CANTalon talon) {
 		this.talon = talon;
-		this.talon.configEncoderCodesPerRev(2048);
+		this.talon.configEncoderCodesPerRev(360);
 	
 		profilePoints = new double[1][1];
 		profilePoints[0][0] = 0;
@@ -117,7 +117,7 @@ public class MotionProfile {
 
 	private void startFilling(double[][] profile, int totalCnt) {
 		CANTalon.TrajectoryPoint point = new CANTalon.TrajectoryPoint();
-	
+		System.out.println("total length:" + totalCnt);
 		if (status.hasUnderrun) {
 			talon.clearMotionProfileHasUnderrun();
 		}

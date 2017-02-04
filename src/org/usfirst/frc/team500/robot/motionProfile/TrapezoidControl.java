@@ -6,8 +6,8 @@ import org.usfirst.frc.team500.robot.utils.Constants;
 public class TrapezoidControl {
 	
 	public static double [][] motionProfileUtility(double rotations, double maxVel, int startingTicks) {
-		int targetTicks = (int)(rotations * Constants.ENCODER_TICKS_RESOLUTION);
-		double velRPM = maxVel * Constants.ENCODER_TICKS_RESOLUTION;
+		int targetTicks = (int)(rotations * Constants.COUNTS_PER_REVOLUTION);
+		double velRPM = maxVel * Constants.COUNTS_PER_REVOLUTION;
 		double accel = velRPM;
 		
 		return ultimateProfileDoubleArray(targetTicks, startingTicks, accel, velRPM);
@@ -15,7 +15,7 @@ public class TrapezoidControl {
 	}
 	
 	private static double [][] ultimateProfileDoubleArray(int targetTicks, int startingTicks, double maxAccel, double maxVel) {
-	
+		System.out.println("ultimateProfileDoubleArray");
 		double[][] trajectoryPointArray = new double[(int)(Math.round(determineTime(Math.abs(targetTicks), maxAccel, maxVel)/10.0)) + 1][3];
 		
 		double currentTime = 0;
@@ -27,8 +27,8 @@ public class TrapezoidControl {
 		for(int i = 0; i < trajectoryPointArray.length; i ++) {
 			double [] pointValues = velocityProfileArray(Math.abs(targetTicks), currentTime, maxAccel, maxVel);
 		
-			trajectoryPointArray[i][0] = outputMultiplier * pointValues[0]/(double)(Constants.ENCODER_TICKS_RESOLUTION) +  startingTicks/(double)(Constants.ENCODER_TICKS_RESOLUTION); //in rotations now
-			trajectoryPointArray[i][1] = outputMultiplier * pointValues[1]/(double)(Constants.ENCODER_TICKS_RESOLUTION) * 60; //RPM now
+			trajectoryPointArray[i][0] = outputMultiplier * pointValues[0]/(double)(Constants.COUNTS_PER_REVOLUTION) +  startingTicks/(double)(Constants.COUNTS_PER_REVOLUTION); //in rotations now
+			trajectoryPointArray[i][1] = outputMultiplier * pointValues[1]/(double)(Constants.COUNTS_PER_REVOLUTION) * 60; //RPM now
 			
 			trajectoryPointArray[i][2] = 10; //time dur in ms
 				
@@ -41,7 +41,7 @@ public class TrapezoidControl {
 	
 	//returns total time needed for move in milliseconds
 	private static int determineTime(int targetTicks, double maxAccel, double maxVel) {
-	
+		System.out.println("determineTime");
 		double startConstantVelPos = maxVel * maxVel / (2 * maxAccel);
 		double startConstantVelTime = maxVel/maxAccel;
 		
@@ -64,7 +64,7 @@ public class TrapezoidControl {
 
 
 	private static double[] velocityProfileArray(int targetTicks, double time, double maxAccel, double maxVel) {
-		
+		System.out.println("velocityProfileArray");
 		double [] outputArray = new double[2];
 		double outputTicks = 0, velocity = 0;
 		
