@@ -1,0 +1,33 @@
+package org.usfirst.frc.team500.robot.subsystems;
+import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.command.Subsystem;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+public class ClimbSubsystem extends Subsystem {
+	Spark miniSim1 = new Spark(0);
+	
+	public static ClimbSubsystem instance = new ClimbSubsystem();
+	
+	public static ClimbSubsystem getInstance(){
+		return instance;
+	}
+	public void setSparkPower(double leftPower){
+		miniSim1.set(leftPower);
+		//miniSim2.set(rightPower);
+	}
+	public void turn() {
+		SmartDashboard.putString("In Climb Command", "yes");
+		miniSim1.set(0.4);
+		//miniSim2.set(-0.4);
+	}
+	public void accelerate(){
+		SmartDashboard.putString("Climber accelartor Command Initiate", "yes");
+		miniSim1.set(1.0);
+		//miniSim2.set(-1.0);
+	}
+	public void stop(){
+		SmartDashboard.putString("Stop Climb", "yes");
+		miniSim1.set(0.0);
+	}
+}
+
